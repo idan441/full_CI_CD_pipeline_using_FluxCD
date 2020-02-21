@@ -1,0 +1,2 @@
+YES - the echo application chart has been succesfully created! 
+Now it made a clusterIP which refer to the application - so just refer to it from your nginx-ingress server! 

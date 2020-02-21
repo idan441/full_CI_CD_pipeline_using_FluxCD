@@ -1,0 +1,90 @@
+
+#########################################################
+### Deployment object - specifiec a group of replicas ###
+#########################################################
+
+#A deployment resource defines a group of replicas. 
+#Each replica is a pod with contianers inside it. 
+#Each pod is a collection of containers which together make one logical unit. For example a group of containers which together can make an application work. 
+#All replicas are the same! 
+#A note: here there are two "Spec" fields - one for defining the replicas, and another one which is for defining the pods. In other words, a deployment is defining a group of replica resources, and each replica resource defins a group of pods. 
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment #Here you define the kind of object you want to make. 
+metadata:
+  name: {{ .Values.name }} #The name of the deployment resource. 
+  labels: #The labels will be used to locate the replicas created in the next scopes. 
+    app: {{ .Values.name }} #When using a service resource to refer to the deploymnet reosucre by its label. ( https://kubernetes-on-aws.readthedocs.io/en/latest/user-guide/labels.html ) 
+  namespace: {{ .Values.namespace }} #The namespace which the object will be created at. 
+spec: #Spec = specification = details and characteristics of the new object. Here I will put definitions for the "deployment" resource. 
+  replicas: {{ .Values.replicas }} #Make two pods of the echo application. 
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template: ### Here you specifiy what the pod will include, in this case it will include one container. 
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec: # Why are there two Spec fields? One above for details of the deployment, and this one here for details about the pod defined inside the deployment! It's defining an object inside another deployment object! 
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" #The image here is on google repository, I uploaded it. 
+          ports: #This is just for declaration, this tells the user on which ports the application will work. However - it won't open any port! It's like "EXPORT" row in a dockerfile! To really open the ports you need to use a "service" resource. 
+            - containerPort: 3000 
+        ### Here I define a reference to the ConfigMap and Secret resources. 
+          envFrom: #Defind environment variables to the containers. 
+            - configMapRef:
+                name: {{ .Values.name }} #This will refer to any ConfigMap in the cluster with the metadata/name set to "echo" . ( I defined it at the file ./configmap/echo.yaml . ) 
+            - secretRef:
+                name: {{ .Values.name }} #Will look for variables defined in secret resources with the metadata/name "echo" . ( See ./secret/echo.yml . ) 
+
+
+
+
+### These definitions will make 1 replica which will contain a pod with one container running the echo application. 
+### The pod will be running - but will not be exposed to the web! In order to do that you need to define a service reosurce! This resource is defined in the file ./service/echo.yml
+
+
+
+#To understand it better, here I give an example of a pod resource definition. 
+  #You can see that this code is included in the development definition above - in the second "Spec" in the above scope. 
+
+# apiVersion: v1
+# kind: Pod
+# Metadata:
+#   name: myapp-pod
+#   Labels:
+#     app: myapp
+# Spec:
+#   Containers:
+#   - name: myapp-container
+#     image: busybox
+#     command: ['sh', '-c', 'echo Hello’]
+
+
+
+###How the deployment is linked to the ConfigMap and Secret - 
+  #I defined a name for the ConfigMap in the file ./configmap/echo.yaml
+        # apiVersion: v1
+        # kind: ConfigMap
+        # metadata:
+        #   name: echo 
+  #And here I refer to it in the container definition, which is inside the replica definition. ( Which is defined by the deployment. ) 
+        # envFrom: 
+        # - name: echo
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: echo 
+
+  #The secret is defined the same way, just I typed "Secret" instead - 
+        # apiVersion: v1
+        # kind: Secret
+        # metadata:
+        #   name: echo 
+        # type: Opaque
+        # data:
+        #   MONGODBURL: bW9uZ29kYjovL3Jvb3Q6MTIzNEBtb25nb2RiOjI3MDE3L2VjaG8K 
+

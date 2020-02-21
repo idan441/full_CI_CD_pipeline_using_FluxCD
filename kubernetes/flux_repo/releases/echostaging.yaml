@@ -1,0 +1,38 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: echo-staging
+  namespace: echo-staging
+  annotations:
+    fluxcd.io/automated: "true"
+    filter.fluxcd.io/chart-image: glob:staging_* #This says to take the tag and add 1 to the end of it - 0.1.<number>
+spec:
+  releaseName: echo-staging
+  chart:
+    git: git@github.com:idan441/echo_app_fluxcd.git
+    path: charts/echo
+    ref: master
+  values:
+    name: echoapp-staging
+    namespace: echo-staging
+    image:
+      repository: "us.gcr.io/coastal-range-267909/echo"
+      tag: "staging_755f126311aea1feba580a8625ce7206135ddaf0"
+    replicaCount: 2
+
+  #The following configurations are made according to the echo application. If editing the mongo application environment variables settings - make sure to update them here too! 
+  #According to the costumer's demand - the staging envrionment should persist to a database named "staging" on the mongodb namespace! 
+  ###ConfigMap - here put the echo application environment variables. 
+  data:
+    port: "3000" #The port the application is running on. 
+    loglevel: info
+    persist: "true" #Whether to use or not to use a mongo database. 
+
+  #Secret - here is the database login address. 
+  secret:
+    mongodburl: mongodb://root:1234@mongodb.mongodb:27017/echo #Put the url in its original format, while parsing the value helm will automatically encode it using base64 . 
+  #Format - mongodb://<username>:<password>@<mongodb-pod-name>.<mongodb-namespace>:<port>/<table-name>    - while the chart being parsed - this value will be automatically encoded to base64 . 
+
+
+

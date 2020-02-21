@@ -1,0 +1,27 @@
+#################################################
+### ConfigMap - defined environement variabls ###
+#################################################
+
+
+#A ConfigMap is a resource which defines environment variabls, that can be defined to container. 
+#When refering to a ConfigMap from a pod resource - then the variables will be set on the containers inside that pod. 
+#A ConfigMap is attached to pod resources. We have learn't taht when defining a deployment resource we literally define the pods with the container, therefore a ConfigMap can be refered from a deployment resource. 
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }} #The name of the config map. In Kubernetes it will be shown as "ConfigMap/echo" - so no need to mention ConfigMap in the name! 
+  namespace: {{ .Values.namespace }} #The namespace which the object will be created at. 
+data: #The environment variables who will be set in pods/containers which will refer to the Config Map. 
+  PORT: "{{ .Values.data.port }}"
+  LOGLEVEL: "{{ .Values.data.loglevel }}"
+  PERSIST: "{{ .Values.data.persist }}"
+  #The environement variables are as needed in the echo application, see the app's ref file for more information about the names and values of the environment variables. 
+  #There is another variable called "MONGODBURL" , which is degined in a secret resource located at ./secret/echo.yaml . 
+  #MONGODBURL: mongodb://root:1234@mongodb-replicaset:27017/?gssapiServiceName=mongodb # format - dbtype:servicename ( Service name which I defined is mongodb. ) 
+
+
+#To refer to the ConfigMap - you need to allocate it in other resources. 
+#In my case I link the Config file to the deployment resource defined in the file ./deployment/echo.yml

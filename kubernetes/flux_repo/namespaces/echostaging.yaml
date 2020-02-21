@@ -1,0 +1,8 @@
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: echo-staging
+
+#This will make a namespace named echo-staging - which will be used by the echo application staging environment deployed by Flux. 

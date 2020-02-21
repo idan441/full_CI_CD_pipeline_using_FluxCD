@@ -1,0 +1,90 @@
+#####################################################################
+### Ingress resource - which configures the nginx-ingress service ###
+#####################################################################
+
+#First of all I installed the nginx-ingress server using the helm chart with the terminal command - "helm install ingress ./chart/nginx-ingress" . 
+#Now in this file I define an Ingress resource - which will configure the nginx-ingress server I have created using the "helm install" command. 
+
+#See the notes in the install_.sh script
+
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" #This is the name of the isuuer resource defined at ./issuer/acme.yaml
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/tls-acme: 'true'
+    nginx.ingress.kubernetes.io/tls-acme: 'true'
+    #ingress.bluemix.net/rewrite-path: "serviceName=echo-prod rewrite=/prod;serviceName=echo-dev rewrite=/dev; serviceName=echo-staging rewrite=/staging"
+  name: echoconf 
+  namespace: nginx-ingress
+spec:
+  rules:
+    - host: echoapp.chickenkiller.com # The website domain, supplied by freedns.affraid.org 
+      http:
+        paths:
+        - path: /prod
+          backend:
+            serviceName: echo-prod
+            servicePort: 80 
+        - path: /dev
+          backend:
+            serviceName: echo-dev
+            servicePort: 80 
+        - path: /staging
+          backend:
+            serviceName: echo-staging
+            servicePort: 80 
+
+
+  
+  # This section is only required if TLS is to be enabled for the Ingress
+    #Since I am using ACME and cert-manager to make an SSL/TLS connection - I did put this section. 
+    #For further information please look at the file ./issuer/acme.yaml and my notes at ./helm notes-ingress server file. 
+  tls:
+      - hosts:
+          - echoapp.chickenkiller.com
+        secretName: tls-key #This secret key is defined automatically - AND IT IS NOT THE SECRET KEY DEFINED AT THE ISSUER SERVICE - SO DON'T GIVE THEM THE SAME NAME! 
+
+
+
+############################
+### Notes and references ###
+############################
+
+
+#After deploying this ./ingress/echo.yaml file it made another service called 
+  #This service configured the ingress server - and linked between the ingress server which I have installed with the command "helm install ingress ./nginx-ingress" and the deployment resource defined at the ./deployment/echo.yml , which defines the echo application pods. 
+  #When I ran the command - "kubectl get services" I saw two services - 
+    #ingress-nginx-ingress-controller - which was created when I installed the ingress with helm. ( Not by this file! ) 
+    #ingress-nginx-ingress-default-backend - which is created in this file and links the deployment to the nginx-ingress server! 
+    #Output - 
+          # NAME                                    TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
+          # ingress-nginx-ingress-controller        LoadBalancer   10.12.5.130    35.222.179.14   80:32287/TCP,443:30238/TCP   26m
+          # ingress-nginx-ingress-default-backend   ClusterIP      10.12.13.168   <none>          80/TCP                       26m
+          # kubernetes                              ClusterIP      10.12.0.1      <none>          443/TCP                      5h41m
+          # mongodb                                 ClusterIP      10.12.11.125   <none>          27017/TCP                    136m
+
+          
+### To check if the TLS certificate was created you can use this command - 
+      # develeap@develeap-Latitude-5500:~/idan/kubernetes/weak1$ kubectl get certificate
+      #   NAME             READY   SECRET           AGE
+      #   acme-key-hamza   True    acme-key-hamza   2m
+
+
+### If you still hapen to have the old keys and you cahnegd the settings - 
+  #You should replace the secret key. 
+  #Both of these keys are created by the ingress resource and the issuer resource. ( Which is defined at ./issuer/acme.yaml . ) 
+  #Delte both keys, and let the ingress and issuer to automatically verify and create a new one instead! 
+  #Use command - "kubectl get secrets" - to get the list of the secrets. 
+  #Use command - "kubectl delete secrets <secret-name>" - to delete teh secrets. this command will delete one single secret everytime - so you need to use it twice on both secret keys! 
+    #the secret key defiend here in the ingress resource - and the one defined in the issuer resource. 
+
+
+# A good example for showing how to use ExternalName service in order to access services on other namespaces - https://blog.donbowman.ca/2018/09/06/accessing-a-service-in-a-different-namespace-from-a-single-ingress-in-kubernetes/
+
+# A great explanation by IBM on how to use ingress with multi namespaces - https://cloud.ibm.com/docs/containers?topic=containers-ingress#multi-ns
+

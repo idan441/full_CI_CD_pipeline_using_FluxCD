@@ -1,0 +1,21 @@
+version: '3.5'
+services:  
+  jenkins:
+    #image: jenkins/jenkins:lts
+    build:
+      context: ./jenkins
+      dockerfile:  Dockerfile
+    container_name: 'jenkins'
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "jenkins_data:/var/jenkins_home"
+    ports:
+      - '80:8080'
+      #- '50000:50000' #Only if there are nodes (slaves) ... 
+    networks:
+      - jenkins_network
+
+networks: 
+  jenkins_network:
+volumes:
+  jenkins_data:

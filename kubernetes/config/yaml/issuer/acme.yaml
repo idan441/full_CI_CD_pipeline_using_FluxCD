@@ -1,0 +1,84 @@
+###########################################################################################
+### Issuer resource - which will configure the cert-manager to work with TLS connection ###
+###########################################################################################
+
+
+# In order to use this issuer resource - you need to install the cert-managr helm chart. 
+# The issuer resource will configure the cert-manager to work with TLS connection. 
+
+
+# I defined this issuer using this official cert-manager guide - 
+  # https://cert-manager.io/docs/configuration/acme/ 
+
+
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: cert-manager
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: idan441@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory 
+    privateKeySecretRef:
+      # Secret resource used to store the account's private key.
+      name: acme-key # It is automatically defined by the issuer - I just need to give it a name here! LIterally - the issuer creates a certificate and a private key - and stores it in that variable. 
+    # Add a single challenge solver, HTTP01 using nginx
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+
+### A note - I also edited the ingress resource to include SSL connection. 
+  #The file path is ./ingress/echo.yaml 
+
+
+### To track down problems user kubectl describe - 
+      # develeap@develeap-Latitude-5500:~/idan/kubernetes/weak1$ kubectl describe ClusterIssuer
+      #   Name:         letsencrypt-staging
+      #   Namespace:    
+      #   Labels:       <none>
+      #   Annotations:  kubectl.kubernetes.io/last-applied-configuration:
+      #                   {"apiVersion":"cert-manager.io/v1alpha2","kind":"ClusterIssuer","metadata":{"annotations":{},"name":"letsencrypt-staging"},"spec":{"acme":...
+      #   API Version:  cert-manager.io/v1alpha2
+      #   Kind:         ClusterIssuer
+      #   Metadata:
+      #     Creation Timestamp:  2020-02-09T11:08:27Z
+      #     Generation:          1
+      #     Resource Version:    233818
+      #     Self Link:           /apis/cert-manager.io/v1alpha2/clusterissuers/letsencrypt-staging
+      #     UID:                 7f574017-4b2c-11ea-bcd6-42010a80017c
+      #   Spec:
+      #     Acme:
+      #       Email:  idan441@gmail.com
+      #       Private Key Secret Ref:
+      #         Name:  acme-key
+      #       Server:  https://acme-staging-v02.api.letsencrypt.org/directory
+      #       Solvers:
+      #         http01:
+      #           Ingress:
+      #             Class:  nginx
+      #   Status:
+      #     Acme:
+      #       Last Registered Email:  idan441@gmail.com
+      #       Uri:                    https://acme-staging-v02.api.letsencrypt.org/acme/acct/12386913
+      #     Conditions:
+      #       Last Transition Time:  2020-02-09T11:08:27Z
+      #       Message:               The ACME account was registered with the ACME server
+      #       Reason:                ACMEAccountRegistered
+      #       Status:                True
+      #       Type:                  Ready
+      #   Events:                    <none>
+
+
+### Important - got stuck? 
+  #You can use this great great great tutorial - https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes 
+  #Make sure you used the right server link to the acme service! 
+    #This one for real certificates - https://acme-v02.api.letsencrypt.org/directory 
+    #This one will issue slef signed certificate - which will promp errors when surfing to the website - https://acme-staging-v02.api.letsencrypt.org/directory 
+
+

@@ -1,0 +1,20 @@
+{
+  "name": "echo",
+  "version": "1.0.0",
+  "description": "You talk, we talk back!",
+  "main": "index.js",
+  "repository": "git@gitlab.com:fatliverfreddy/echo.git",
+  "author": "Avital Tamir",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "config": "^3.2.3",
+    "express": "^4.17.1",
+    "js-yaml": "^3.13.1",
+    "log4js": "^5.2.2",
+    "mongodb": "^3.3.2",
+    "saslprep": "^1.0.3"
+  }
+}

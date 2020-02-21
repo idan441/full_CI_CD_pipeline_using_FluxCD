@@ -1,0 +1,36 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: echo-prod
+  namespace: echo-prod
+  annotations:
+    fluxcd.io/automated: "true"
+    filter.fluxcd.io/chart-image: semver:~0.1 #This says to take the tag and add 1 to the end of it - 0.1.<number>
+spec:
+  releaseName: echo-prod
+  chart:
+    git: git@github.com:idan441/echo_app_fluxcd.git
+    path: charts/echo
+    ref: master
+  values:
+    name: echoapp-prod
+    namespace: echo-prod
+    image:
+      repository: us.gcr.io/coastal-range-267909/echo
+      tag: 0.1.48
+    replicaCount: 2
+
+  #The following configurations are made according to the echo application. If editing the mongo application environment variables settings - make sure to update them here too! 
+  #According to the costumer's demand - the production envrionment should persist to a database named "echo" on the mongodb namespace! 
+  ###ConfigMap - here put the echo application environment variables. 
+  data:
+    port: "3000" #The port the application is running on. 
+    loglevel: info
+    persist: "true" #Whether to use or not to use a mongo database. 
+
+  #Secret - here is the database login address. 
+  secret:
+    mongodburl: mongodb://root:1234@mongodb.mongodb:27017/echo #Put the url in its original format, while parsing the value helm will automatically encode it using base64 . 
+  #Format - mongodb://<username>:<password>@<mongodb-pod-name>.<mongodb-namespace>:<port>/<table-name>    - while the chart being parsed - this value will be automatically encoded to base64 . 
+

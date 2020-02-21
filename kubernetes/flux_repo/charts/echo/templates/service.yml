@@ -1,0 +1,53 @@
+#####################################################################
+### Service resource - which will be refered by the ingress nginx ###
+#####################################################################
+
+
+
+#A service resource is used to connect the application to the web. 
+  #From one side it is connected to the web. 
+  #From the other side it is connected to a deployment resource. ( Which in turn is connected to pods running the application. ) 
+#In simple words: a service resource is a "gateway" ! 
+
+#*** Update - here I make a cluster IP which is basically just an internal load-balancer with nothing more. 
+  #This is a clusterIP with no external IP! 
+  #I will refer it by the ingress resource defined at ./ingress/echo.yaml
+  #Useful expalanation about hwo to define the service which will interact with ingress - https://cloud.google.com/kubernetes-engine/docs/how-to/configure-backend-service 
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }} #When typing "kubectl get services" the output will be "service/echoapp" - so no need to write in here the words service, it will automatically be added! 
+  namespace: {{ .Values.namespace }} #The namespace which the object will be created at. 
+spec:
+  type: ClusterIP #This will make a cluster with an IP address for the pods and the service - but will not expose it to the web. THis is a headless service - and this is what I want to refer to form the ingress server! ( The ingress server will be the one to be exposed ot the web. ) 
+  ports:
+    - name: http
+      port: {{ .Values.ports.port }} #This port will be the entrance for the traffic to this headless service - which will proxy to port 3000 on the echo app later... ( see next 2 lines... ) 
+      protocol: TCP
+      targetPort: {{ .Values.ports.porttarget }} #The echo application is running on port 3000 . 
+  selector:
+    app: {{ .Values.name }} #The service resource will search for a deployment resource with the "label/app" which equals to "echoapp" . 
+                 #When I defined the deployment reosurce in ./deployment/echo.yml I set a field label and inside it antoher filed name app with the value "echoapp" . 
+                 #For an example see - https://kubernetes-on-aws.readthedocs.io/en/latest/user-guide/labels.html 
+
+
+
+### I will note again the connection between the service reosurce and deployment resource: 
+  #In ./deployment/echo.yml I defined - 
+          # apiVersion: apps/v1
+          # kind: Deployment 
+          # Metadata:
+          #   name: echo_deployment #The name of the deployment resource. 
+          #   Labels: 
+          #     app: echoapp 
+  # And now I define a service resource which will reference to any deployment resource the the label/app "echoapp" 
+          # apiVersion: v1
+          # kind: Service
+          # spec:
+          #   selector:
+          #     app: echodeployment 
+
+

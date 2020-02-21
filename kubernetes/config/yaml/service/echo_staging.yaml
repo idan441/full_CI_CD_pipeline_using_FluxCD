@@ -1,0 +1,31 @@
+##########################################################################
+################### Make an ExternalName which is -#######################
+### a service which references to another srevice on another namespace ###
+##########################################################################
+
+#In this echo application project three environments were created - production, development (in short dev) and staging. 
+#All of these three nevironments are created with FluxCD in GitOps methodology. Each of these projects is in its own namespace. 
+#The ingress server is on a namespace of its own "nginx-ingress" and has one external IP address. 
+
+
+#In order to be able to reference the ingress server to the three namespaces - there is a need for an "ExternalName" service. 
+##Every echo environment is having a ClusterIP service which gives it a private IP address inside the k8s cluster network. 
+##The problem is that ingress can refer to ClusterIP services within its namespace. ("nginx-ingress") 
+##Therefore, Here I have been creating an ExternalName service, which can link to another ClusterIP in another namespace. 
+##I have been setting a total of 3 ExternalName services - one for every environment. 
+##Therefore when a user will surf the following route will occur - ingress server -> ExternalName -> ClusterIP (in the environment) -> application pod 
+
+#For the most important question - why not just cretae 3 nginx-ingress server? Easy! Creating three nginx-ingress servers will acquire three external IP addresses - which can cost hundreads of dollar per year. 
+
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-staging
+  namespace: nginx-ingress
+spec:
+  type: ExternalName
+  externalName: echoapp-staging.echo-staging.svc.cluster.local
+  ports:
+  - port: 80

@@ -1,0 +1,34 @@
+# # Default values for echo.
+# # This is a YAML-formatted file.
+# # Declare variables to be passed into your templates.
+
+
+#Service name - 
+#This definition will give the same name to all resources mentioned in this chart. I did it like that to make things simplified and to save time - but sure you can give different names but it will require many variables... 
+#WHEN YOU WOULD LIKE AN NGINX-INGRESS SERVER TO PROXY TO THE SERVICE - REFER IT TO THE NAME OF THE SERVICE DEFINED HERE! ( because it will be the name of the clusterIP . ) 
+#Make sure this name is not used by any other resource at the k8s cluster! 
+name: echoapp
+namespace: echo-prod #The namespace which the object will be created at. 
+
+#Deployment
+image:
+  repository: us.gcr.io/coastal-range-267909/echo #The echo application image, in this case in the google cloud. 
+  tag: 0.1.38
+
+#Deployment
+replicas: 2
+ports:
+  port: 80 #the acces port to the cluster ip which refers to the application. 
+  porttarget: 3000 #The application port
+
+###ConfigMap
+data: 
+  port: "3000"
+  loglevel: info
+  persist: "false"
+
+#Secret
+secret:
+  mongodburl: mongodb://root:1234@mongodb.mongodb:27017/echo #Put the url in its original format, while parsing the value helm will automatically encode it using base64 . 
+  #Format - mongodb://<username>:<password>@<mongodb-pod-name>.<mongodb-namespace>:<port>/<table-name>    - while the chart being parsed - this value will be automatically encoded to base64 . 
+
