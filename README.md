@@ -140,6 +140,6 @@ Monitoring - with Prometheus and Grafana.
 
 For more information on how to access these see the README.md file at the Kuberenets directory. ( at the path ./kubernetes/README.md ) 
 
-![ An example for logging to Kibana using proxy-forward. ](../images-for-readme/kibana.gif)
+![ An example for logging to Kibana using proxy-forward. ](./images-for-readme/kibana.gif)
 
 
